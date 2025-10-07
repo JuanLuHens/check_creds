@@ -29,3 +29,4 @@ OPENSEARCH_PASS = os.getenv("OPENSEARCH_PASS")
 
 #Dominios
 CANDIDATOS = os.getenv("CANDIDATOS")
+COMUNIDAD = os.getenv("COMUNIDAD")
