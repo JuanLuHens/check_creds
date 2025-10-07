@@ -77,6 +77,7 @@ def extraer_dominio_base(url):
     else:
         return ext.domain
 
+
 def process_file_and_insert(file_path, file_log):
     regex = r'^[^:|]+[:|][^:|]+[:|][^:|]+$'
     regex_port = r'^[^:|]+[:|][^:|]+[:|][^:|]+[:|][^:|]+$'
@@ -92,7 +93,39 @@ def process_file_and_insert(file_path, file_log):
     commit_interval = 5000  
     bulk_buffers = {}  
     registros_insertados = 0
-    
+    # Comprobar si en las primeras líneas del archivo aparece "URL:" o "SOFTWARE:", si no, continuar desde la línea 96
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f_check:
+        primeras_lineas = [next(f_check, '') for _ in range(20)]
+        contiene_url_o_software = any(
+            linea.strip().upper().startswith("URL:") or linea.strip().upper().startswith("SOFT:") 
+            for linea in primeras_lineas
+        )
+    if contiene_url_o_software:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f, open(revisar_file, 'a') as revisar:
+            linea_ordenada = []
+            bloque = {"URL": None, "USER": None, "PASS": None}
+            for linea in f:
+                linea = linea.strip()
+                if linea.startswith("SOFT:"):
+                    # Nuevo bloque, reiniciar
+                    bloque = {"URL": None, "USER": None, "PASS": None}
+                elif linea.startswith("URL:"):
+                    bloque["URL"] = linea[4:].strip()
+                elif linea.startswith("USER:"):
+                    bloque["USER"] = linea[5:].strip()
+                elif linea.startswith("PASS:"):
+                    bloque["PASS"] = linea[5:].strip()
+                    # Cuando tenemos los tres campos, los unimos y guardamos
+                    if bloque["URL"] and bloque["USER"] and bloque["PASS"]:
+                        linea_ordenada.append(f"{bloque['URL']}:{bloque['USER']}:{bloque['PASS']}")
+                        bloque = {"URL": None, "USER": None, "PASS": None}
+    # Al finalizar el procesamiento, exportar linea_ordenada a un archivo de texto, una línea por registro
+    if linea_ordenada:
+        archivo_exportacion = f'/opt/TelegramDownloader/finalizado/{file_name}_ordenado.txt'
+        file_path = archivo_exportacion
+        with open(archivo_exportacion, 'w', encoding='utf-8') as f_export:
+            for registro in linea_ordenada:
+                f_export.write(registro + '\n')
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f, open(revisar_file, 'a') as revisar:
         for line in f:
             lineas += 1
