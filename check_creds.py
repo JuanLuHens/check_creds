@@ -5,7 +5,7 @@ from datetime import datetime
 import urllib3
 import modulos.candidatos2 as candidatos2
 import modulos.comunidad as comunidad
-from modulos.config import SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_TO, OPENSEARCH_BASE_URL, OPENSEARCH_USER, OPENSEARCH_PASS, CANDIDATOS, COMUNIDAD
+from modulos.config import SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_TO, OPENSEARCH_BASE_URL, OPENSEARCH_USER, OPENSEARCH_PASS, CANDIDATOS, COMUNIDAD, CGI
 from modulos.db_client import DatabaseClient
 import pandas as pd
 from email.mime.text import MIMEText
@@ -294,6 +294,7 @@ def main():
     #dominios
     candidatos = CANDIDATOS
     comunidad = COMUNIDAD
+    cgi = CGI
     if records is not None:
         logger.info(f"Consulta completada. Se recuperaron {len(records)} registros")
         
@@ -307,6 +308,12 @@ def main():
                 elif item['_source']['dominio'] == comunidad:
                     logger.info(f"{item['_source']['usuario']} {item['_id']}")
                     resultado = comunidad.login_success(item['_source']['usuario'],item['_source']['password'])
+                    if resultado:
+                        lista_credenciales.append(check_creds(item, database_client))
+                    update_revisado(base_url, auth, item['_id'], 'Si')
+                elif item['_source']['dominio'] == cgi:
+                    logger.info(f"{item['_source']['usuario']} {item['_id']}")
+                    resultado = cgi.login_success(item['_source']['usuario'],item['_source']['password'])
                     if resultado:
                         lista_credenciales.append(check_creds(item, database_client))
                     update_revisado(base_url, auth, item['_id'], 'Si')
