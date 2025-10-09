@@ -139,7 +139,9 @@ def process_file_and_insert(file_path, file_log):
                     tabla = 'leak_clientes_datos_pro'
                 contador += 1
                 line = line.strip().replace(' ', ':')
-                if line.endswith(':') or line.endswith('|'):
+                line = line.strip().replace(':|', ':')
+                line = line.strip().replace('|:', ':')
+                while line.endswith(':') or line.endswith('|'):
                     line = line[:-1]
                 # Si la línea contiene http o https después del segundo ':', ponerlo al principio
                 parts = line.split(':')
