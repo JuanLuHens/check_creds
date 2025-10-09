@@ -141,6 +141,18 @@ def process_file_and_insert(file_path, file_log):
                 line = line.strip().replace(' ', ':')
                 if line.endswith(':') or line.endswith('|'):
                     line = line[:-1]
+                # Si la línea contiene http o https después del segundo ':', ponerlo al principio
+                parts = line.split(':')
+                if len(parts) >= 3:
+                    # Unir los posibles splits de http(s):// que contienen ':'
+                    # Buscar http o https en cualquier parte después del segundo elemento
+                    for i in range(2, len(parts)):
+                        if parts[i].startswith('http://') or parts[i].startswith('https://'):
+                            # Reconstruir la URL completa (por si hay ':' en la URL)
+                            url = ':'.join(parts[i:])
+                            user = parts[0]
+                            password = parts[1]
+                            line = f"{url}:{user}:{password}"
                 line = re.sub(r'Application::.*', '', line)
                 line = re.sub(r'\[UNKNOWN:or:V70\]', 'UNKNOWN', line)
                 line = re.sub(r'\[NOT_SAVED\]', 'UNKNOWN', line)
