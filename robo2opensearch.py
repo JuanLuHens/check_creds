@@ -146,7 +146,7 @@ def process_file_and_insert(file_path, file_log):
                 # Si la línea contiene http o https después del segundo ':', ponerlo al principio
                 parts = line.split(':')
                 if len(parts) >= 3:
-                    if parts[2] == 'http' or parts[2] == 'https':
+                    if parts[2] == 'http' or parts[2] == 'https' or parts[2] == 'android':
                         url = ':'.join(parts[2:])
                         user = parts[0]
                         password = parts[1]
