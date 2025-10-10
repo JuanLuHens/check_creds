@@ -29,7 +29,13 @@ def insert_db(line, revisar, file_name, port, tabla, bulk_data):
                 st_usuario = 'UNKNOWN'
                 st_password = 'UNKNOWN'
             else:
-                st_url, st_usuario, st_password = re.split(r'[:|]', line)
+                parts = line.split(':')
+                if len(parts) == 2:
+                    st_usuario, st_password = re.split(r'[:|]', line)
+                    st_url = 'localhost.homelan'
+                    tabla = 'leak_only_creds_pro'
+                else:
+                    st_url, st_usuario, st_password = re.split(r'[:|]', line)
         if tabla == 'leak_atento_error_pro':
             st_dominio = 'UNKNOWN'
         else:
