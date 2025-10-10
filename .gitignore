@@ -52,3 +52,5 @@ $RECYCLE.BIN/
 *.zip
 *.pyc
 *.log
+venv/
+.venv/
