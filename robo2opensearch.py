@@ -157,6 +157,7 @@ def process_file_and_insert(file_path, file_log):
                         user = parts[0]
                         password = parts[1]
                         line = f"{url}:{user}:{password}"
+                line = re.sub(r'about:blank*', 'localhost.homelan', line)
                 line = re.sub(r'Application::.*', '', line)
                 line = re.sub(r'\[UNKNOWN:or:V70\]', 'UNKNOWN', line)
                 line = re.sub(r'\[NOT_SAVED\]', 'UNKNOWN', line)
