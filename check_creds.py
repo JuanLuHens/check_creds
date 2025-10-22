@@ -49,7 +49,7 @@ def email(lista_credenciales):
     from_address = SMTP_FROM or SMTP_USER
     to_address = SMTP_TO
     to_address_str = ", ".join(to_address)
-    subject = 'Credenciales expuestas darkweb'
+    subject = 'Credenciales válidas expuestas darkweb'
     msg = MIMEMultipart()
     msg['From'] = from_address
     msg['To'] = to_address_str
@@ -112,7 +112,7 @@ def generar_cuerpo_email(lista_credenciales):
                             <td style="padding: 30px 25px;">
                                 <h2 style="color: #FF6600; margin-top: 0;"><center>Credenciales Expuestas Detectadas</center></h2>
                                 <p style="color: #333333; line-height: 1.5;">
-                                    Nuestro sistema de monitoreo ha detectado que las siguientes credenciales han sido expuestas en la Deep/Dark Web. 
+                                    Nuestro sistema de monitoreo ha detectado que las siguientes credenciales han sido expuestas en la Deep/Dark Web y se ha comprobado que son válidas. 
                                     Es crucial revisar y tomar las medidas necesarias de inmediato.
                                 </p>
                                 <p style="color: #333333; line-height: 1.5;">
