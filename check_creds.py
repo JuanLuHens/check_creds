@@ -330,7 +330,64 @@ def main():
                         lista_credenciales.append(check_creds(item, database_client))
                     update_revisado(base_url, auth, item['_id'], 'Si')
         if len(lista_credenciales) > 0:
-            email(lista_credenciales)                 
+            # Eliminar duplicados de lista_credenciales (usuarios con el mismo 'usuario', 'password' y 'dominio')
+            lista_unica = []
+            vistos = set()
+            for cred in lista_credenciales:
+                clave = (cred.get('usuario'), cred.get('password'), cred.get('dominio'))
+                if clave not in vistos:
+                    lista_unica.append(cred)
+                    vistos.add(clave)
+            lista_credenciales = lista_unica
+            email(lista_credenciales)
+    # Eliminar duplicados de la tabla creds_atento dejando solo el primero por cada combinación (usuario, password, dominio)
+    try:
+        deleted_count = 0
+        # Consulta para encontrar duplicados (id es varchar, así que usamos MIN(id) lexicográfico)
+        duplicates_query = """
+            SELECT usuario, password, dominio, MIN(id) as min_id
+            FROM creds_atento
+            GROUP BY usuario, password, dominio
+            HAVING COUNT(*) > 1
+        """
+        # Busca combinaciones duplicadas dejando uno (el de menor id lexicográfico)
+        df_dupes = database_client.select_data(duplicates_query)
+        if df_dupes is not None:
+            ids_unicos = set(row['min_id'] for row in df_dupes.to_dict('records'))
+        else:
+            ids_unicos = set()
+
+        # Selecciona todos los ids existentes para esos grupos duplicados
+        all_dupes_query = """
+            SELECT c.id
+            FROM creds_atento c
+            WHERE EXISTS (
+                SELECT 1
+                FROM creds_atento d
+                WHERE d.usuario = c.usuario
+                  AND d.password = c.password
+                  AND d.dominio = c.dominio
+                GROUP BY d.usuario, d.password, d.dominio
+                HAVING COUNT(*) > 1
+            )
+        """
+        df_all_dupes = database_client.select_data(all_dupes_query)
+        if df_all_dupes is not None:
+            ids_a_borrar = [row['id'] for row in df_all_dupes.to_dict('records') if row['id'] not in ids_unicos]
+        else:
+            ids_a_borrar = []
+        if ids_a_borrar:
+            # Borra los duplicados (manteniendo el min_id lexicográfico)
+            # Al ser varchar, hay que envolver los ids entre comillas simples
+            ids_quoted = ",".join(f"'{i}'" for i in ids_a_borrar)
+            delete_stmt = f"DELETE FROM creds_atento WHERE id IN ({ids_quoted})"
+            database_client.execute_non_query(delete_stmt)
+            deleted_count = len(ids_a_borrar)
+            logger.info(f"Eliminados {deleted_count} duplicados de creds_atento")
+        else:
+            logger.info("No se encontraron duplicados para eliminar en creds_atento")
+    except Exception as e:
+        logger.exception(f"Error al eliminar duplicados de creds_atento: {e}")
     else:
         logger.error("No se pudieron obtener los registros")
     

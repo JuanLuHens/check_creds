@@ -47,6 +47,17 @@ class DatabaseClient:
             logger.error(f"Error al actualizar la fila {df.iloc[0]['id']}: {e}")
             raise
     
+    def execute_non_query(self, query):
+        """ Ejecuta una consulta que no retorna datos (INSERT, UPDATE, DELETE) """
+        try:
+            with self.engine.begin() as conn:
+                result = conn.execute(text(query))
+                #logger.info(f"Consulta ejecutada correctamente: {query}")
+                return result.rowcount
+        except Exception as e:
+            logger.error(f"Error al ejecutar la consulta {query}: {e}")
+            raise
+    
 
     
 
